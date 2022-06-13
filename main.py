@@ -20,8 +20,16 @@ def get_db():
     finally:
         db.close()
 
-# Read Service
+# Non Idempotent Read Service
 @app.get("/read/{npm}")
+def read_service(npm: str, db: Session = Depends(get_db)):
+    db_mahasiswa = db.query(Mahasiswa).get(npm)
+    if db_mahasiswa:
+        return {"status": "OK", "npm": db_mahasiswa.npm, "nama": db_mahasiswa.nama }
+    raise HTTPException(status_code=404, detail=f"Mahasiswa dengan npm {npm} tidak ditemukan")
+
+# Idempotent Read Service
+@app.get("/read/{npm}/{trx}")
 def read_service(npm: str, db: Session = Depends(get_db)):
     db_mahasiswa = db.query(Mahasiswa).get(npm)
     if db_mahasiswa:
